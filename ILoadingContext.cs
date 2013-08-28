@@ -1,7 +1,9 @@
 ﻿namespace Data.Net
 {
-    public interface ILoadingContext<TParam> where TParam : struct
+    public interface ILoadingContext<in TParam> where TParam : struct
     {
         void ProvideParameter(TParam parameterType, object value);
+
+        object State { get; }
     }
 }

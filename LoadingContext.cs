@@ -11,6 +11,8 @@ namespace Data.Net
             _parameters = parameters;
         }
 
+        public object State { get; set; }
+
         public void ProvideParameter(TParam parameterType, object value)
         {
             lock (_parameters)

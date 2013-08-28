@@ -17,6 +17,11 @@ namespace Data.Net
 
         public IDictionary<TData, object> LoadData(IDictionary<TParam, object> inputParameters, params TData[] dataToLoad)
         {
+            return LoadData(inputParameters, dataToLoad, null);
+        }
+
+        public IDictionary<TData, object> LoadData(IDictionary<TParam, object> inputParameters, TData[] dataToLoad, object callerContext)
+        {
             var startTime = DateTime.Now;
             Debug.WriteLine("Loading {0}", String.Join(", ", dataToLoad));
 
@@ -26,7 +31,7 @@ namespace Data.Net
             foreach (var dataType in dataToLoad)
             {
                 var type = dataType;
-                ThreadPool.QueueUserWorkItem(state => LoadData(type, parameters, data));
+                ThreadPool.QueueUserWorkItem(state => LoadData(type, parameters, data, state), callerContext);
             }
 
             lock (data)
@@ -36,7 +41,7 @@ namespace Data.Net
             }
 
             Debug.WriteLine("Loading finished in {0}", DateTime.Now - startTime);
-            return data;
+            return data;            
         }
 
         #region private
@@ -57,7 +62,7 @@ namespace Data.Net
             return result.ToArray();
         }
 
-        private void LoadData(TData data, IDictionary<TParam, object> parameters, IDictionary<TData, object> dataContainer)
+        private void LoadData(TData data, IDictionary<TParam, object> parameters, IDictionary<TData, object> dataContainer, object callerContext)
         {
             var startTime = DateTime.Now;
             Debug.WriteLine("Will load {0}", data);
@@ -102,7 +107,7 @@ namespace Data.Net
 
             try
             {
-                object dataValue = _dataSource.LoadData(data, parameterValues, new LoadingContext<TParam>(parameters));
+                object dataValue = _dataSource.LoadData(data, parameterValues, new LoadingContext<TParam>(parameters) {State = callerContext});
 
                 lock (dataContainer)
                 {

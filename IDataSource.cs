@@ -2,7 +2,7 @@
 
 namespace Data.Net
 {
-    public interface IDataSource<TParam, TData> 
+    public interface IDataSource<TParam, in TData> 
         where TParam : struct
         where TData : struct
     {
