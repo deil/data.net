@@ -100,12 +100,19 @@ namespace Data.Net
 
             Debug.WriteLine("[{0}] All required parameters do exist", data);
 
-            object dataValue = _dataSource.LoadData(data, parameterValues, new LoadingContext<TParam>(parameters));
-
-            lock (dataContainer)
+            try
             {
-                dataContainer.Add(data, dataValue);
-                Monitor.Pulse(dataContainer);
+                object dataValue = _dataSource.LoadData(data, parameterValues, new LoadingContext<TParam>(parameters));
+
+                lock (dataContainer)
+                {
+                    dataContainer.Add(data, dataValue);
+                    Monitor.Pulse(dataContainer);
+                }
+            }
+            catch (Exception ex)
+            {
+                
             }
 
             Debug.WriteLine("[{0}] Loading finished in {1}", data, DateTime.Now - startTime);
