@@ -45,6 +45,7 @@
     <Compile Include="ILoadingContext.cs" />
     <Compile Include="InputParametersAttribute.cs" />
     <Compile Include="LoadingContext.cs" />
+    <Compile Include="OptionalInputParameter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProvidesAttribute.cs" />
   </ItemGroup>

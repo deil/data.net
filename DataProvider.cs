@@ -62,6 +62,19 @@ namespace Data.Net
             return result.ToArray();
         }
 
+        private TParam[] GetOptionalParameters<TParam, TData>(TData dataType)
+        {
+            var type = dataType.GetType();
+            var memberInfo = type.GetMember(dataType.ToString());
+            var attributes = memberInfo[0].GetCustomAttributes(typeof(OptionalInputParameter), false).Cast<OptionalInputParameter>();
+            var result = new HashSet<TParam>();
+            attributes.Select(attr => attr.Parameter)
+                .Cast<TParam>()
+                .ToList()
+                .ForEach(p => result.Add(p));
+            return result.ToArray();            
+        }
+
         private void LoadData(TData data, IDictionary<TParam, object> parameters, IDictionary<TData, object> dataContainer, object callerContext)
         {
             var startTime = DateTime.Now;
@@ -104,11 +117,25 @@ namespace Data.Net
             }
 
             Debug.WriteLine("[{0}] All required parameters do exist", data);
+
+            foreach (var paramType in GetOptionalParameters<TParam, TData>(data))
+            {
+                if (parameterValues.ContainsKey(paramType))
+                    continue;
+
+                object paramVal;
+                if (parameters.TryGetValue(paramType, out paramVal))
+                {
+                    Debug.WriteLine("[{0}] Optional parameter {1} is supplied", data, paramType);
+                    parameterValues.Add(paramType, paramVal);
+                }
+            }
+
             object dataValue = null;
 
             try
             {
-                dataValue = _dataSource.LoadData(data, parameterValues, new LoadingContext<TParam>(parameters) { State = callerContext });
+                dataValue = _dataSource.LoadData(data, parameterValues, new LoadingContext<TParam>(parameters) {State = callerContext});
             }
             catch (Exception ex)
             {
