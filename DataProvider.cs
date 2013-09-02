@@ -6,20 +6,42 @@ using System.Threading;
 
 namespace Data.Net
 {
+    /// <summary>
+    /// Loads different data types from external source
+    /// </summary>
+    /// <typeparam name="TParam">User-defined type (enumeration) of input parameters</typeparam>
+    /// <typeparam name="TData">User-defined type (enumeration) of data</typeparam>
     public class DataProvider<TParam, TData>
         where TData : struct
         where TParam : struct
     {
+        /// <summary>
+        /// Initializes a new instance of the DataProvider class, specifying a data source to load data from 
+        /// </summary>
+        /// <param name="dataSource">Data source to load data from</param>
         public DataProvider(IDataSource<TParam, TData> dataSource)
         {
             _dataSource = dataSource;
         }
 
+        /// <summary>
+        /// Loads requested data from associated IDataSource
+        /// </summary>
+        /// <param name="inputParameters">Input parameters for IDataSource</param>
+        /// <param name="dataToLoad">List of types of data that should be loaded</param>
+        /// <returns>Requested data, grouped by type</returns>
         public IDictionary<TData, object> LoadData(IDictionary<TParam, object> inputParameters, params TData[] dataToLoad)
         {
             return LoadData(inputParameters, dataToLoad, null);
         }
 
+        /// <summary>
+        /// Loads requested data from associated IDataSource and supplies an object containing data to be used by associated IDataSource 
+        /// </summary>
+        /// <param name="inputParameters">Input parameters for IDataSource</param>
+        /// <param name="dataToLoad">List of types of data that should be loaded</param>
+        /// <param name="callerContext">Object containing data to be used by associated IDataSource</param>
+        /// <returns>Requested data, grouped by type</returns>
         public IDictionary<TData, object> LoadData(IDictionary<TParam, object> inputParameters, TData[] dataToLoad, object callerContext)
         {
             var startTime = DateTime.Now;
@@ -47,9 +69,7 @@ namespace Data.Net
         #region private
         private readonly IDataSource<TParam, TData> _dataSource;
 
-        private TParam[] GetInputParameters<TParam, TData>(TData dataType)
-            where TParam : struct
-            where TData : struct
+        private TParam[] GetInputParameters(TData dataType)
         {
             var type = dataType.GetType();
             var memberInfo = type.GetMember(dataType.ToString());
@@ -62,7 +82,7 @@ namespace Data.Net
             return result.ToArray();
         }
 
-        private TParam[] GetOptionalParameters<TParam, TData>(TData dataType)
+        private TParam[] GetOptionalParameters(TData dataType)
         {
             var type = dataType.GetType();
             var memberInfo = type.GetMember(dataType.ToString());
@@ -80,7 +100,7 @@ namespace Data.Net
             var startTime = DateTime.Now;
             Debug.WriteLine("Will load {0}", data);
 
-            var inputParameters = GetInputParameters<TParam, TData>(data);
+            var inputParameters = GetInputParameters(data);
             var parameterValues = new Dictionary<TParam, object>();
 
             lock (parameters)
@@ -118,7 +138,7 @@ namespace Data.Net
 
             Debug.WriteLine("[{0}] All required parameters do exist", data);
 
-            foreach (var paramType in GetOptionalParameters<TParam, TData>(data))
+            foreach (var paramType in GetOptionalParameters(data))
             {
                 if (parameterValues.ContainsKey(paramType))
                     continue;
