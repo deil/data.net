@@ -64,3 +64,5 @@ Just ask Data.Net to load your data:
   var parameters = new Dictionary<MyParameterType, object>() { {MyParameterType.UserId, 1} };
   var data = new DataProvider(new MyDataSource()).LoadData(parameters, MyDataType.UserProfile, MyDataType.Period);
 ```
+
+Data.Net will use ThreadPool to load all requested data in parallel.
