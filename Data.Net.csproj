@@ -12,6 +12,7 @@
     <AssemblyName>Data.Net</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -45,6 +46,7 @@
     <Compile Include="ILoadingContext.cs" />
     <Compile Include="InputParametersAttribute.cs" />
     <Compile Include="LoadingContext.cs" />
+    <Compile Include="LoadingResult.cs" />
     <Compile Include="OptionalInputParameter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProvidesAttribute.cs" />

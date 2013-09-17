@@ -30,9 +30,9 @@ namespace Data.Net
         /// <param name="inputParameters">Input parameters for IDataSource</param>
         /// <param name="dataToLoad">List of types of data that should be loaded</param>
         /// <returns>Requested data, grouped by type</returns>
-        public IDictionary<TData, object> LoadData(IDictionary<TParam, object> inputParameters, params TData[] dataToLoad)
+        public LoadingResult<TData> LoadData(IDictionary<TParam, object> inputParameters, params TData[] dataToLoad)
         {
-            return LoadData(inputParameters, dataToLoad, null);
+            return LoadData(inputParameters, dataToLoad, true, null);
         }
 
         /// <summary>
@@ -40,15 +40,16 @@ namespace Data.Net
         /// </summary>
         /// <param name="inputParameters">Input parameters for IDataSource</param>
         /// <param name="dataToLoad">List of types of data that should be loaded</param>
+        /// <param name="stopAfterFirstException">If true, will stop loading after catching first exception</param>
         /// <param name="callerContext">Object containing data to be used by associated IDataSource</param>
         /// <returns>Requested data, grouped by type</returns>
-        public IDictionary<TData, object> LoadData(IDictionary<TParam, object> inputParameters, TData[] dataToLoad, object callerContext)
+        public LoadingResult<TData> LoadData(IDictionary<TParam, object> inputParameters, TData[] dataToLoad, bool stopAfterFirstException, object callerContext)
         {
             var startTime = DateTime.Now;
             Debug.WriteLine("Loading {0}", String.Join(", ", dataToLoad));
 
             var parameters = new Dictionary<TParam, object>(inputParameters);
-            var data = new Dictionary<TData, object>();
+            var data = new LoadingResult<TData> {Success = true};
 
             foreach (var dataType in dataToLoad)
             {
@@ -58,7 +59,7 @@ namespace Data.Net
 
             lock (data)
             {
-                while (data.Count < dataToLoad.Length)
+                while ((!stopAfterFirstException || (stopAfterFirstException && data.Success)) && (data.Count < dataToLoad.Length))
                     Monitor.Wait(data);
             }
 
@@ -95,7 +96,7 @@ namespace Data.Net
             return result.ToArray();            
         }
 
-        private void LoadData(TData data, IDictionary<TParam, object> parameters, IDictionary<TData, object> dataContainer, object callerContext)
+        private void LoadData(TData data, IDictionary<TParam, object> parameters, LoadingResult<TData> dataContainer, object callerContext)
         {
             var startTime = DateTime.Now;
             Debug.WriteLine("Will load {0}", data);
@@ -156,16 +157,19 @@ namespace Data.Net
             try
             {
                 dataValue = _dataSource.LoadData(data, parameterValues, new LoadingContext<TParam>(parameters) {State = callerContext});
+
+                lock (dataContainer)
+                {
+                    dataContainer.AddData(data, dataValue);
+                    Monitor.Pulse(dataContainer);
+                }
             }
             catch (Exception ex)
             {
-                dataValue = ex;
-            }
-            finally
-            {
                 lock (dataContainer)
                 {
-                    dataContainer.Add(data, dataValue);
+                    dataContainer.Success = false;
+                    dataContainer.AddException(ex);
                     Monitor.Pulse(dataContainer);
                 }
             }
