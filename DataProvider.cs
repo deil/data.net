@@ -168,6 +168,7 @@ namespace Data.Net
             {
                 lock (dataContainer)
                 {
+                    dataContainer.AddData(data, null);
                     dataContainer.Success = false;
                     dataContainer.AddException(ex);
                     Monitor.Pulse(dataContainer);

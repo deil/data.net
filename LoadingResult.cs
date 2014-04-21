@@ -31,6 +31,16 @@ namespace Data.Net
         }
 
         /// <summary>
+        /// Checks whether data with specified key has been loaded successfully
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public bool IsLoaded(TData key)
+        {
+            return _loadedData.ContainsKey(key) && this[key] != null;
+        }
+
+        /// <summary>
         /// All catched exceptions while loading data
         /// </summary>
         public Exception[] Exceptions
